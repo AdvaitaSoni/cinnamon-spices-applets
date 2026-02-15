@@ -1,16 +1,20 @@
 const { WindowManager } = require("./window");
 class EventManager {
     windowMgr;
+    cyclingEnabled;
+    appendEnabled;
     static inst;
-    static get instance() {
+    static instance(cyclingEnabled, appendEnabled) {
         if (EventManager.inst) {
             return EventManager.inst;
         } else {
-            return (EventManager.inst = new EventManager());
+            return (EventManager.inst = new EventManager(cyclingEnabled, appendEnabled));
         }
     }
 
-    constructor() {
+    constructor(cyclingEnabled, appendEnabled) {
+        this.cyclingEnabled = cyclingEnabled;
+        this.appendEnabled = appendEnabled;
         this.windowMgr = WindowManager.instance;
     }
 
@@ -80,11 +84,21 @@ class EventManager {
     }
     moveSwitchNextWorkspace() {
         let index = global.screen.get_active_workspace_index() + 1;
-        this.windowMgr.moveToWorkspace(index + 1);
+        if (index == global.workspace_manager.n_workspaces && this.cyclingEnabled()) {
+            this.windowMgr.moveToWorkspace(1);
+        } else if (index == global.workspace_manager.n_workspaces && !this.appendEnabled()) {
+            return;
+        } else {
+            this.windowMgr.moveToWorkspace(index + 1);
+        }
     }
     moveSwitchPrevWorkspace() {
         let index = global.screen.get_active_workspace_index() + 1;
-        this.windowMgr.moveToWorkspace(index - 1);
+        if (index == 1 && this.cyclingEnabled()) {
+            this.windowMgr.moveToWorkspace(global.workspace_manager.n_workspaces);
+        } else {
+            this.windowMgr.moveToWorkspace(index - 1);
+        }
     }
 
     //for switching
@@ -92,6 +106,7 @@ class EventManager {
         this.windowMgr.switchWorkspace(1);
     }
     switchWorkspace2() {
+        global.log('workspace 2')
         this.windowMgr.switchWorkspace(2);
     }
     switchWorkspace3() {
@@ -117,11 +132,25 @@ class EventManager {
     }
     switchNextWorkspace() {
         let index = global.screen.get_active_workspace_index() + 1;
-        this.windowMgr.switchWorkspace(index + 1);
+        global.log("index is ", index)
+        global.log("calling switch ")
+        if (index == global.workspace_manager.n_workspaces && this.cyclingEnabled()) {
+            this.windowMgr.switchWorkspace(1);
+        } else if (index == global.workspace_manager.n_workspaces && !this.appendEnabled()) {
+            return;
+        } else {
+            this.windowMgr.switchWorkspace(index + 1);
+        }
     }
     switchPrevWorkspace() {
         let index = global.screen.get_active_workspace_index() + 1;
-        this.windowMgr.switchWorkspace(index - 1);
+        global.log("index is ", index)
+        global.log("calling switch ")
+        if (index == 1 && this.cyclingEnabled()) {
+            this.windowMgr.switchWorkspace(global.workspace_manager.n_workspaces);
+        } else {
+            this.windowMgr.switchWorkspace(index - 1);
+        }
     }
     kill() {
         this.windowMgr.closeWindow();
